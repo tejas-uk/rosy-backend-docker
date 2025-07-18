@@ -1,5 +1,5 @@
 import os
-from mem0 import MemoryClient
+from mem0 import AsyncMemoryClient
 from typing import List, Dict, Optional
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
@@ -9,11 +9,11 @@ MEM0_API_KEY = os.environ.get("MEM0_API_KEY") or None
 if not MEM0_API_KEY:
     raise NotImplementedError("MEM0_API_KEY is not set")
 
-client = MemoryClient(api_key=MEM0_API_KEY)
+client = AsyncMemoryClient(api_key=MEM0_API_KEY)
 
 
 @tool
-def add_to_memory(messages: list[dict], config: RunnableConfig) -> str:
+async def add_to_memory(messages: list[dict], config: RunnableConfig) -> str:
     """Add a message to the memory.
     
     Args:
@@ -23,14 +23,14 @@ def add_to_memory(messages: list[dict], config: RunnableConfig) -> str:
     """
     global client
     user_id = config["metadata"].get("user_id")
-    client.add(
+    await client.add(
         messages,
         user_id=user_id,
     )
     return "Memory added successfully"
 
 @tool
-def get_from_memory(query: str, config: RunnableConfig) -> str:
+async def get_from_memory(query: str, config: RunnableConfig) -> str:
     """Get the memory for a user.
     
     Args:
@@ -42,7 +42,7 @@ def get_from_memory(query: str, config: RunnableConfig) -> str:
     """
     global client
     user_id = config.get("user_id")
-    memories = client.search(query, user_id=user_id)
+    memories = await client.search(query, user_id=user_id)
     if memories:
         memories_str = ""
         count = 1

@@ -54,9 +54,9 @@ def get_relevant_memory_agent():
 
     return agent
 
-def get_supervisor_agent():
+async def get_supervisor_agent():
     model_config = config["llm_models"]["supervisor"]  
-    # checkpointer = get_checkpointer()
+    # checkpointer = await get_checkpointer()
 
     llm = get_llm(provider=model_config["provider"], model_name=model_config["model"])
     with open(f'{BASE_DIR}/prompts/{model_config["prompt_file"]}', 'r') as file:

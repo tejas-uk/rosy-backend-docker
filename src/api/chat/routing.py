@@ -49,7 +49,7 @@ async def get_chat_messages(
     if not chat or chat.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this chat")
     
-    messages = chat_service.get_chat_messages(session, chat, current_user)
+    messages = await chat_service.get_chat_messages(session, chat, current_user)
     return messages
 
 # 4. Send message and 5. Get message from AI model
@@ -64,7 +64,7 @@ async def send_message(
     if not chat or chat.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this chat")
     
-    result = chat_service.send_message(session, chat, payload.content, current_user)
+    result = await chat_service.send_message(session, chat, payload.content, current_user)
     return AIResponse(content=result["content"])
 
 # Edit title of chat

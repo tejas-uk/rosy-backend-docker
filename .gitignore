@@ -4,6 +4,16 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Local test files
+test_async_checkpointer.py
+test_api_async.py
+ASYNC_MIGRATION_COMPLETE.md
+ASYNC_MIGRATION.md
+.env
+*/.env
+
+MIGRATION_SUMMARY.md
+
 # C extensions
 *.so
 

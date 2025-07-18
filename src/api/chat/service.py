@@ -13,8 +13,15 @@ class ChatService:
     """Service for managing chats using LangGraph checkpointer."""
     
     def __init__(self):
-        self.agent = get_agent()
-        self.checkpointer = get_checkpointer()
+        self.agent = None
+        self.checkpointer = None
+    
+    async def _ensure_initialized(self):
+        """Ensure agent and checkpointer are initialized."""
+        if self.agent is None:
+            self.agent = await get_agent()
+        if self.checkpointer is None:
+            self.checkpointer = await get_checkpointer()
     
     def create_chat(self, session: Session, user: User, title: Optional[str] = None) -> Chat:
         """Create a new chat with a unique thread ID."""
@@ -32,8 +39,10 @@ class ChatService:
         
         return chat
     
-    def get_chat_messages(self, session: Session, chat: Chat, user: User) -> ChatHistory:
+    async def get_chat_messages(self, session: Session, chat: Chat, user: User) -> ChatHistory:
         """Get all messages for a chat from LangGraph checkpointer."""
+        await self._ensure_initialized()
+        
         config = {"configurable": {"thread_id": chat.thread_id, "user_id": user.id}}
         
         print(f"Getting messages for chat {chat.id} with thread_id: {chat.thread_id}")
@@ -62,14 +71,16 @@ class ChatService:
         )
 
     
-    def send_message(self, session: Session, chat: Chat, content: str, user: User) -> dict:
+    async def send_message(self, session: Session, chat: Chat, content: str, user: User) -> dict:
         """Send a message and get AI response using LangGraph."""
+        await self._ensure_initialized()
+        
         config = {"configurable": {"thread_id": chat.thread_id, "user_id": user.id}}
         
         print(f"Sending message to chat {chat.id} with thread_id: {chat.thread_id}")
         
         # Check if this is the first message to set the title
-        checkpoint_tuple = self.checkpointer.get_tuple(config)
+        checkpoint_tuple = await self.checkpointer.aget_tuple(config)
         is_first_message = checkpoint_tuple is None or not checkpoint_tuple[1].get("messages")
         print(f"Is first message: {is_first_message}")
         
@@ -86,7 +97,7 @@ class ChatService:
         # Invoke the agent with the message
         try:
             print(f"Invoking agent with message: {content}")
-            response = self.agent.invoke(
+            response = await self.agent.ainvoke(
                 {"messages": [HumanMessage(content=content)]}, 
                 config=config
             )

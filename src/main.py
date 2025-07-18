@@ -32,12 +32,12 @@ def health_check():
 
 
 
-def run_agent():
+async def run_agent():
     from ai.graph import get_agent
     from langchain_core.messages import HumanMessage, AIMessage
     
 
-    agent = get_agent()
+    agent = await get_agent()
     # agent = get_supervisor_agent()
     config = {"configurable": {"thread_id": 2}, "user_id": 2}
     while True:
@@ -47,7 +47,7 @@ def run_agent():
             break
 
         inputs = [HumanMessage(content=query)]
-        response = agent.invoke({"messages": inputs}, config)
+        response = await agent.ainvoke({"messages": inputs}, config)
         # response = agent.invoke({"messages": inputs}, config)
         # Get the last message from the result
         print("-"*60)
@@ -63,4 +63,4 @@ def run_agent():
 
 
 if __name__ == "__main__":
-    run_agent()
+    asyncio.run(run_agent())
