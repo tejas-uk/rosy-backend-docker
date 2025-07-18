@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import os
 from contextlib import asynccontextmanager
 import asyncio
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.db import init_db
 from api.chat.routing import router as chat_router
@@ -20,6 +21,15 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(chat_router)
 app.include_router(auth_router)
+
+# Add CORS middleware for frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure this for your frontend domain in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def read_index():

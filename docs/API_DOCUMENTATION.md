@@ -67,56 +67,139 @@ console.log('Access token:', auth.access_token);
 }
 ```
 
-### Verify Authentication Token
+### User Registration
 
-**Endpoint:** `POST /api/auth/verify`
+**Endpoint:** `POST /api/auth/register`
 
-Verify the validity of an authentication token.
+Register a new user with username, password, and optional email.
 
 #### cURL Example
 ```bash
-curl -X POST "http://localhost:8000/api/auth/verify" \
+curl -X POST "http://localhost:8000/api/auth/register" \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-  -d '{}'
+  -d '{
+    "username": "john_doe",
+    "password": "secure_password",
+    "email": "john@example.com"
+  }'
 ```
 
 #### TypeScript Example
 ```typescript
-interface VerifyResponse {
-  valid: boolean;
-  user_id: string;
+interface UserCreate {
   username: string;
+  password: string;
+  email?: string;
 }
 
-async function verifyToken(token: string): Promise<VerifyResponse> {
-  const response = await fetch('http://localhost:8000/api/auth/verify', {
+async function registerUser(userData: UserCreate): Promise<AuthResponse> {
+  const response = await fetch('http://localhost:8000/api/auth/register', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({}),
+    body: JSON.stringify(userData),
   });
 
   if (!response.ok) {
-    throw new Error(`Token verification failed: ${response.statusText}`);
+    throw new Error(`Registration failed: ${response.statusText}`);
   }
 
   return response.json();
 }
+```
 
-// Usage
-const verification = await verifyToken(auth.access_token);
-console.log('Token valid:', verification.valid);
+### User Login
+
+**Endpoint:** `POST /api/auth/login`
+
+Login with username and password using OAuth2 form data.
+
+#### cURL Example
+```bash
+curl -X POST "http://localhost:8000/api/auth/login" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=john_doe&password=secure_password"
+```
+
+#### TypeScript Example
+```typescript
+async function loginUser(username: string, password: string): Promise<AuthResponse> {
+  const formData = new URLSearchParams();
+  formData.append('username', username);
+  formData.append('password', password);
+
+  const response = await fetch('http://localhost:8000/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Login failed: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+```
+
+### Get Current User
+
+**Endpoint:** `GET /api/auth/me`
+
+Get the current authenticated user's information.
+
+#### cURL Example
+```bash
+curl -X GET "http://localhost:8000/api/auth/me" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+#### TypeScript Example
+```typescript
+interface User {
+  id: number;
+  username: string;
+  email?: string;
+  auth_provider: string;
+  created_at: string;
+  last_login_at?: string;
+}
+
+async function getCurrentUser(token: string): Promise<User> {
+  const response = await fetch('http://localhost:8000/api/auth/me', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get user: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+```
+
+### Logout
+
+**Endpoint:** `POST /api/auth/logout`
+
+Logout the current user.
+
+#### cURL Example
+```bash
+curl -X POST "http://localhost:8000/api/auth/logout" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 #### Response
 ```json
 {
-  "valid": true,
-  "user_id": "123",
-  "username": "john_doe"
+  "detail": "Logged out successfully"
 }
 ```
 
@@ -238,35 +321,33 @@ console.log('Created chat:', newChat);
 }
 ```
 
-### Get Chat History
+### Get Chat Messages
 
-**Endpoint:** `GET /api/chats/{chat_id}/history`
+**Endpoint:** `GET /api/chats/get_chat_messages`
 
 Retrieve the conversation history for a specific chat.
 
 #### cURL Example
 ```bash
-curl -X GET "http://localhost:8000/api/chats/1/history" \
+curl -X GET "http://localhost:8000/api/chats/get_chat_messages?chat_id=1" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 #### TypeScript Example
 ```typescript
-interface Message {
-  id: number;
-  chat_id: number;
+interface SimpleMessage {
   content: string;
-  role: 'user' | 'assistant';
-  created_at: string;
+  type: string; // "user" or "ai"
 }
 
 interface ChatHistory {
-  chat: Chat;
-  messages: Message[];
+  messages: SimpleMessage[];
+  title: string;
+  thread_id: string;
 }
 
-async function getChatHistory(token: string, chatId: number): Promise<ChatHistory> {
-  const response = await fetch(`http://localhost:8000/api/chats/${chatId}/history`, {
+async function getChatMessages(token: string, chatId: number): Promise<ChatHistory> {
+  const response = await fetch(`http://localhost:8000/api/chats/get_chat_messages?chat_id=${chatId}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -274,57 +355,44 @@ async function getChatHistory(token: string, chatId: number): Promise<ChatHistor
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to get chat history: ${response.statusText}`);
+    throw new Error(`Failed to get chat messages: ${response.statusText}`);
   }
 
   return response.json();
 }
 
 // Usage
-const history = await getChatHistory(auth.access_token, 1);
-console.log('Chat history:', history);
+const messages = await getChatMessages(auth.access_token, 1);
+console.log('Chat messages:', messages);
 ```
 
 #### Response
 ```json
 {
-  "chat": {
-    "id": 1,
-    "user_id": 123,
-    "title": "My First Chat",
-    "thread_id": "abc-123-def-456",
-    "created_at": "2024-01-15T10:30:00Z",
-    "updated_at": "2024-01-15T10:35:00Z",
-    "is_deleted": false
-  },
   "messages": [
     {
-      "id": 1,
-      "chat_id": 1,
       "content": "Hello, how are you?",
-      "role": "user",
-      "created_at": "2024-01-15T10:30:00Z"
+      "type": "user"
     },
     {
-      "id": 2,
-      "chat_id": 1,
       "content": "Hello! I'm doing well, thank you for asking. How can I help you today?",
-      "role": "assistant",
-      "created_at": "2024-01-15T10:30:05Z"
+      "type": "ai"
     }
-  ]
+  ],
+  "title": "My First Chat",
+  "thread_id": "abc-123-def-456"
 }
 ```
 
 ### Send Message
 
-**Endpoint:** `POST /api/chats/{chat_id}/send_message`
+**Endpoint:** `POST /api/chats/send_message`
 
 Send a message to the AI assistant in a specific chat.
 
 #### cURL Example
 ```bash
-curl -X POST "http://localhost:8000/api/chats/1/send_message" \
+curl -X POST "http://localhost:8000/api/chats/send_message?chat_id=1" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -d '{
@@ -338,18 +406,16 @@ interface SendMessageRequest {
   content: string;
 }
 
-interface SendMessageResponse {
+interface AIResponse {
   content: string;
-  message_id: number;
-  timestamp: string;
 }
 
 async function sendMessage(
   token: string, 
   chatId: number, 
   content: string
-): Promise<SendMessageResponse> {
-  const response = await fetch(`http://localhost:8000/api/chats/${chatId}/send_message`, {
+): Promise<AIResponse> {
+  const response = await fetch(`http://localhost:8000/api/chats/send_message?chat_id=${chatId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -373,33 +439,65 @@ console.log('AI response:', response.content);
 #### Response
 ```json
 {
-  "content": "I don't have access to real-time weather information, but I can help you find weather data or answer other questions. Would you like me to help you search for weather information?",
-  "message_id": 3,
-  "timestamp": "2024-01-15T11:05:00Z"
+  "content": "I don't have access to real-time weather information, but I can help you find weather data or answer other questions. Would you like me to help you search for weather information?"
+}
+```
+
+### Edit Chat Title
+
+**Endpoint:** `PUT /api/chats/edit_chat_title`
+
+Update the title of a specific chat.
+
+#### cURL Example
+```bash
+curl -X PUT "http://localhost:8000/api/chats/edit_chat_title?chat_id=1&title=Updated%20Chat%20Title" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+#### TypeScript Example
+```typescript
+async function editChatTitle(token: string, chatId: number, title: string): Promise<void> {
+  const response = await fetch(`http://localhost:8000/api/chats/edit_chat_title?chat_id=${chatId}&title=${encodeURIComponent(title)}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to edit chat title: ${response.statusText}`);
+  }
+}
+```
+
+#### Response
+```json
+{
+  "detail": "Chat title updated successfully"
 }
 ```
 
 ### Delete Chat
 
-**Endpoint:** `DELETE /api/chats/{chat_id}`
+**Endpoint:** `DELETE /api/chats/{chat_id}/delete_chat`
 
 Delete a specific chat and all its messages.
 
 #### cURL Example
 ```bash
-curl -X DELETE "http://localhost:8000/api/chats/1" \
+curl -X DELETE "http://localhost:8000/api/chats/1/delete_chat" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 #### TypeScript Example
 ```typescript
 interface DeleteResponse {
-  success: boolean;
-  message: string;
+  detail: string;
 }
 
 async function deleteChat(token: string, chatId: number): Promise<DeleteResponse> {
-  const response = await fetch(`http://localhost:8000/api/chats/${chatId}`, {
+  const response = await fetch(`http://localhost:8000/api/chats/${chatId}/delete_chat`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -415,14 +513,13 @@ async function deleteChat(token: string, chatId: number): Promise<DeleteResponse
 
 // Usage
 const result = await deleteChat(auth.access_token, 1);
-console.log('Delete result:', result.message);
+console.log('Delete result:', result.detail);
 ```
 
 #### Response
 ```json
 {
-  "success": true,
-  "message": "Chat deleted successfully"
+  "detail": "Chat deleted successfully"
 }
 ```
 
@@ -443,8 +540,6 @@ curl -X GET "http://localhost:8000/health"
 ```typescript
 interface HealthResponse {
   status: string;
-  timestamp: string;
-  version: string;
 }
 
 async function checkHealth(): Promise<HealthResponse> {
@@ -465,9 +560,7 @@ console.log('App status:', health.status);
 #### Response
 ```json
 {
-  "status": "healthy",
-  "timestamp": "2024-01-15T11:00:00Z",
-  "version": "1.0.0"
+  "status": "healthy"
 }
 ```
 
@@ -486,9 +579,6 @@ curl -X GET "http://localhost:8000/api/chats/health"
 ```typescript
 interface ChatHealthResponse {
   status: string;
-  checkpointer: string;
-  memory_service: string;
-  ai_agents: string;
 }
 
 async function checkChatHealth(): Promise<ChatHealthResponse> {
@@ -509,10 +599,7 @@ console.log('Chat service status:', chatHealth.status);
 #### Response
 ```json
 {
-  "status": "healthy",
-  "checkpointer": "connected",
-  "memory_service": "connected",
-  "ai_agents": "ready"
+  "status": "healthy"
 }
 ```
 
@@ -520,17 +607,24 @@ console.log('Chat service status:', chatHealth.status);
 
 ### Common Error Responses
 
+#### 400 Bad Request
+```json
+{
+  "detail": "Username already registered"
+}
+```
+
 #### 401 Unauthorized
 ```json
 {
-  "detail": "Not authenticated"
+  "detail": "Could not validate credentials"
 }
 ```
 
 #### 403 Forbidden
 ```json
 {
-  "detail": "Not enough permissions"
+  "detail": "Not authorized to access this chat"
 }
 ```
 
@@ -557,7 +651,7 @@ console.log('Chat service status:', chatHealth.status);
 #### 500 Internal Server Error
 ```json
 {
-  "detail": "Internal server error"
+  "detail": "Failed to update chat title"
 }
 ```
 
@@ -679,11 +773,40 @@ class RosyAIClient {
     return response;
   }
 
-  async verifyToken(): Promise<VerifyResponse> {
-    return this.request<VerifyResponse>('/api/auth/verify', {
+  async register(userData: UserCreate): Promise<AuthResponse> {
+    const response = await this.request<AuthResponse>('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify({}),
+      body: JSON.stringify(userData),
     });
+    
+    this.setToken(response.access_token);
+    return response;
+  }
+
+  async login(username: string, password: string): Promise<AuthResponse> {
+    const formData = new URLSearchParams();
+    formData.append('username', username);
+    formData.append('password', password);
+
+    const response = await this.request<AuthResponse>('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData,
+    });
+    
+    this.setToken(response.access_token);
+    return response;
+  }
+
+  async getCurrentUser(): Promise<User> {
+    return this.request<User>('/api/auth/me');
+  }
+
+  async logout(): Promise<void> {
+    await this.request('/api/auth/logout', { method: 'POST' });
+    this.token = null;
   }
 
   // Chat Management
@@ -698,19 +821,25 @@ class RosyAIClient {
     });
   }
 
-  async getChatHistory(chatId: number): Promise<ChatHistory> {
-    return this.request<ChatHistory>(`/api/chats/${chatId}/history`);
+  async getChatMessages(chatId: number): Promise<ChatHistory> {
+    return this.request<ChatHistory>(`/api/chats/get_chat_messages?chat_id=${chatId}`);
   }
 
-  async sendMessage(chatId: number, content: string): Promise<SendMessageResponse> {
-    return this.request<SendMessageResponse>(`/api/chats/${chatId}/send_message`, {
+  async sendMessage(chatId: number, content: string): Promise<AIResponse> {
+    return this.request<AIResponse>(`/api/chats/send_message?chat_id=${chatId}`, {
       method: 'POST',
       body: JSON.stringify({ content }),
     });
   }
 
+  async editChatTitle(chatId: number, title: string): Promise<void> {
+    await this.request(`/api/chats/edit_chat_title?chat_id=${chatId}&title=${encodeURIComponent(title)}`, {
+      method: 'PUT',
+    });
+  }
+
   async deleteChat(chatId: number): Promise<DeleteResponse> {
-    return this.request<DeleteResponse>(`/api/chats/${chatId}`, {
+    return this.request<DeleteResponse>(`/api/chats/${chatId}/delete_chat`, {
       method: 'DELETE',
     });
   }
@@ -746,9 +875,12 @@ async function main() {
     const response = await client.sendMessage(chat.id, 'Hello, AI!');
     console.log('AI response:', response.content);
 
-    // Get chat history
-    const history = await client.getChatHistory(chat.id);
-    console.log('Chat messages:', history.messages.length);
+    // Get chat messages
+    const messages = await client.getChatMessages(chat.id);
+    console.log('Chat messages:', messages.messages.length);
+
+    // Edit chat title
+    await client.editChatTitle(chat.id, 'Updated Chat Title');
 
   } catch (error) {
     if (error instanceof RosyAIError) {
