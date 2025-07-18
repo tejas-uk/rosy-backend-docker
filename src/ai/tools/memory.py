@@ -41,7 +41,7 @@ async def get_from_memory(query: str, config: RunnableConfig) -> str:
         Top matching memories for the user.
     """
     global client
-    user_id = config.get("user_id")
+    user_id = config["metadata"].get("user_id")
     memories = await client.search(query, user_id=user_id)
     if memories:
         memories_str = ""
