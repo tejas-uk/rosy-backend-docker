@@ -42,18 +42,7 @@ async def get_from_memory(query: str, config: RunnableConfig) -> str:
     """
     global client
     user_id = config["metadata"].get("user_id")
+    print(f"User ID: {user_id}")
     memories = await client.search(query, user_id=user_id)
-    if memories:
-        memories_str = ""
-        count = 1
-        for memory in memories['results']:
-            memories_str += f"Memory {count}:\n"
-            memories_str += f"Data: {memory['memory']}\n"
-            if memory['metadata'] and hasattr(memory['metadata'], 'category'):
-                memories_str += f"Category: {memory['metadata']['category']}\n"
-            memories_str += f"\n\n"
-            count += 1
-
-        return memories_str
-    else:
-        return "No memories found"
+    print(f"Memories: {memories}")
+    return memories
