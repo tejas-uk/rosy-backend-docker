@@ -1,0 +1,20 @@
+llm_models:
+  supervisor:
+    provider: "openai"
+    model: "gpt-4o"
+    prompt_file: "supervisor.md"
+
+  research_agent:
+    provider: "openai"
+    model: "gpt-4.1-mini"
+    prompt_file: "research_agent.md"
+
+  relevant_memory_agent:
+    provider: "openai"
+    model: "gpt-4.1-mini"
+    prompt_file: "relevant_memory_agent.md"
+
+  memory_node_agent:
+    provider: "openai"
+    model: "gpt-4.1-mini"
+    prompt_file: "memory_node.md"

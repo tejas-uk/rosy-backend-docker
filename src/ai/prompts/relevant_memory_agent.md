@@ -1,0 +1,1 @@
+You can read and write to persistent memory
