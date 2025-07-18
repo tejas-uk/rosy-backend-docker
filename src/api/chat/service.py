@@ -121,12 +121,12 @@ class ChatService:
         
         config = {"configurable": {"thread_id": chat.thread_id, "user_id": user.id}}
         
-        print(f"Sending message to chat {chat.id} with thread_id: {chat.thread_id}")
+        # print(f"Sending message to chat {chat.id} with thread_id: {chat.thread_id}")
         
         # Check if this is the first message to set the title
         checkpoint_tuple = await self.checkpointer.aget_tuple(config)
         is_first_message = checkpoint_tuple is None or not checkpoint_tuple[1].get("messages")
-        print(f"Is first message: {is_first_message}")
+        # print(f"Is first message: {is_first_message}")
         
         # Set title from first message if not already set
         if is_first_message and not chat.title:
@@ -140,8 +140,8 @@ class ChatService:
         
         # Invoke the agent with the message
         try:
-            print(f"Invoking agent with message: {content}")
-            print(f"Using config: {config}")
+            # print(f"Invoking agent with message: {content}")
+            # print(f"Using config: {config}")
             
             # Get existing messages from the checkpoint
             existing_messages = []
@@ -152,29 +152,29 @@ class ChatService:
             
             # Add the new human message to the conversation
             all_messages = existing_messages + [HumanMessage(content=content)]
-            print(f"Invoking agent with {len(all_messages)} total messages")
+            # print(f"Invoking agent with {len(all_messages)} total messages")
             
             response = await self.agent.ainvoke(
                 {"messages": all_messages}, 
                 config=config
             )
-            print(f"Agent response keys: {response.keys()}")
-            print(f"Agent response messages count: {len(response.get('messages', []))}")
+            # print(f"Agent response keys: {response.keys()}")
+            # print(f"Agent response messages count: {len(response.get('messages', []))}")
             
             # Extract the AI response
             last_message = next((m for m in reversed(response["messages"])
                                 if isinstance(m, AIMessage)), None)
             
             ai_content = last_message.content if last_message else "No response from AI"
-            print(f"AI content: {ai_content}")
+            # print(f"AI content: {ai_content}")
             
             # Check if the checkpoint was saved
-            print("Checking if checkpoint was saved...")
+            # print("Checking if checkpoint was saved...")
             checkpoint_tuple = await self.checkpointer.aget_tuple(config)
             if checkpoint_tuple and checkpoint_tuple[1]:
                 channel_values = checkpoint_tuple[1].get("channel_values", {})
                 saved_messages = channel_values.get("messages", [])
-                print(f"Saved messages count: {len(saved_messages)}")
+                # print(f"Saved messages count: {len(saved_messages)}")
             else:
                 print("No checkpoint found after sending message")
             

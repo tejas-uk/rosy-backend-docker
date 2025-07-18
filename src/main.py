@@ -60,9 +60,9 @@ async def run_agent():
         response = await agent.ainvoke({"messages": inputs}, config)
         # response = agent.invoke({"messages": inputs}, config)
         # Get the last message from the result
-        print("-"*60)
-        print(response)
-        print("-"*60)
+        # print("-"*60)
+        # print(response)
+        # print("-"*60)
         last_message = next((m for m in reversed(response["messages"])
                             if isinstance(m, AIMessage)), None)
     
