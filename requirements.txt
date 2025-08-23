@@ -20,4 +20,3 @@ langchain-tavily
 mem0ai
 pyyaml
 langgraph-checkpoint-postgres
-python-dotenv

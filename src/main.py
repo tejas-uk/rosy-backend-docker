@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 import os
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=".env", override=True)
 from contextlib import asynccontextmanager
 import asyncio
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,8 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.db import init_db
 from api.chat.routing import router as chat_router
 from api.auth.routing import router as auth_router
-from dotenv import load_dotenv
-load_dotenv(dotenv_path=".env", override=True)
+
 
 
 @asynccontextmanager
@@ -25,7 +26,11 @@ app.include_router(auth_router)
 # Add CORS middleware for frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure this for your frontend domain in production
+    allow_origins=[
+        "https://app.userosy.ai",
+        "http://localhost:3000",  # For local development
+        "http://localhost:5173",  # For Vite development server
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -49,7 +54,7 @@ async def run_agent():
 
     agent = await get_agent()
     # agent = get_supervisor_agent()
-    config = {"configurable": {"thread_id": 2}, "user_id": 2}
+    config = {"configurable": {"thread_id": 2, "user_id": 2}}
     while True:
         query = input("⛄️ You: ")
 

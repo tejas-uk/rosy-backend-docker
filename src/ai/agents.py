@@ -24,7 +24,7 @@ def get_research_agent():
     
     llm = get_llm(provider=model_config["provider"], model_name=model_config["model"])
     
-    with open(f'{BASE_DIR}/prompts/{model_config["prompt_file"]}', 'r') as file:
+    with open(f'{BASE_DIR}/prompts/{model_config["prompt_file"]}', encoding='utf-8', mode='r') as file:
         prompt = file.read()
     
     tools = [web_search, search_pinecone]
@@ -42,7 +42,7 @@ def get_research_agent():
 def get_relevant_memory_agent():
     model_config = config["llm_models"]["relevant_memory_agent"]
     llm = get_llm(provider=model_config["provider"], model_name=model_config["model"])
-    with open(f'{BASE_DIR}/prompts/{model_config["prompt_file"]}', 'r') as file:
+    with open(f'{BASE_DIR}/prompts/{model_config["prompt_file"]}', encoding='utf-8', mode='r') as file:
         prompt = file.read()
     tools = [get_from_memory]
     agent = create_react_agent(
@@ -59,7 +59,7 @@ async def get_supervisor_agent():
     # checkpointer = await get_checkpointer()
 
     llm = get_llm(provider=model_config["provider"], model_name=model_config["model"])
-    with open(f'{BASE_DIR}/prompts/{model_config["prompt_file"]}', 'r') as file:
+    with open(f'{BASE_DIR}/prompts/{model_config["prompt_file"]}', encoding='utf-8', mode='r') as file:
         prompt = file.read()
 
     research_agent = get_research_agent()
